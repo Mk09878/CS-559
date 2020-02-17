@@ -13,10 +13,11 @@ np.random.seed(100)
 
 #Reading the data into a numpy array
 def read_idx(filename):
-    with open(filename, 'rb') as f:
-        zero, data_type, dims = st.unpack('>HBB', f.read(4))
-        shape = tuple(st.unpack('>I', f.read(4))[0] for d in range(dims))
-        return np.frombuffer(f.read(), dtype=np.uint8).reshape(shape)
+    with open(filename, 'rb') as file:
+        temp = st.unpack('>HBB', file.read(4))
+        shape = tuple(st.unpack('>I', file.read(4))[0] for d in range(temp[2]))
+        data = np.frombuffer(file.read(), dtype=np.uint8).reshape(shape)
+        return data
 
 train_data = read_idx('train-images.idx3-ubyte')
 train_labels = read_idx('train-labels.idx1-ubyte')
@@ -42,8 +43,8 @@ def step_act(y):
             y[x] = 0
     return y
 
+#Training the neural network (Updating the weights)
 def training(n, learning_rate, e):
-    #Training the neural network (Updating the weights)
     W = copy.deepcopy(W_old)
     epoch = 0
     errors_epoch = [0] * n          
@@ -61,10 +62,9 @@ def training(n, learning_rate, e):
             x = train_data[i].reshape(784,1)
             W = W + learning_rate * (d[train_labels[i]] - step_act(np.dot(W, x))) * x.T
             
-        #print(errors_epoch[epoch - 1]/n)
         if(errors_epoch[epoch - 1]/n <= e or epoch > 70):
             break
-    
+    print("----------For n = {}, learning_rate = {}, e = {}----------\n".format(n, learning_rate, e))
     print("Number of epochs:",epoch)
     epoch_arr = range(epoch)
     plt.title("Epoch Number vs Number of Misclassifications")
@@ -72,12 +72,11 @@ def training(n, learning_rate, e):
     plt.xlabel("Epoch Number")
     plt.ylabel("Number of Misclassifications")
     plt.show()
-    
+
     return W
     
-
+#Testing the neural network
 def test(W):    
-    #Testing the neural network
     no_of_errors = 0
     for i in range(len(test_data)):
         x = test_data[i].reshape(784,1)
@@ -85,6 +84,7 @@ def test(W):
         if(temp.argmax() != test_labels[i]):
             no_of_errors += 1
     print("Percentage of testing error:", no_of_errors/len(test_data) * 100)
+    print("")
 
 W = training(100, 0.5, 0)
 test(W)
@@ -95,18 +95,18 @@ test(W)
 W = training(1000, 1, 0)
 test(W) 
 
-#training(60000, 1, 0)
+"""training(60000, 1, 0)
 
 W_old = np.random.uniform(-1, 1, size = (10, 784))
-W = training(1000, 1, 0.5)
+W = training(60000, 1, 0.14)
 test(W) 
 
 W_old = np.random.uniform(-1, 1, size = (10, 784))
-W = training(1000, 1, 0.25)
+W = training(60000, 1, 0.14)
 test(W)
 
 W_old = np.random.uniform(-1, 1, size = (10, 784))
-W = training(1000, 1, 0.14)
+W = training(60000, 1, 0.14)
 test(W)
-
+"""
 
