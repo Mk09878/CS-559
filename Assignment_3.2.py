@@ -10,10 +10,13 @@ np.random.seed(100)
 #Initialize x and y
 x = np.array([np.arange(1, 51)])
 x = x.reshape(50,)
-y = np.ones((50,1))
+y = np.ones((50,))
 for i in range(50):
     y[i] = i + 1 + np.random.uniform(-1, 1)
 
+xones = np.array([np.ones((50,)), x])
 
-temp = np.array([np.ones(50), x])
-temp = np.transpose(np.array([np.ones(50), x]))
+inverse = np.linalg.inv(np.matmul(xones, xones.T))
+
+temp = np.matmul(xones.T, inverse)
+w = np.matmul(y, temp)
