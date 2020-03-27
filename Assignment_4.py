@@ -48,7 +48,7 @@ def fb_final_act(y):
 
 """ --- Feedforward Training --- """
 def feed_forward():
-    
+    temp = []
     for i in range(300):
         for j in range(24):
             
