@@ -23,11 +23,11 @@ plt.show()
 w_init = np.random.uniform(0, 1, size = (24, 1))
 w_init_bias = np.random.uniform(0, 1, size = (24, 1))
 w_final = np.random.uniform(0, 1, size = (24, 1))
-w_final_bias = np.random.uniform(0, 1, size = (24, 1))
-u = []                                                 #Induced local field from initial layer
-z = []                                                 #Output from initial layer 
-p = 0                                                  #Induced local field from final layer
-y = 0                                                  #Output from final layer
+w_final_bias = np.random.uniform(0, 1, size = (1, 1))
+induced_local_field_init = []                                                 #Induced local field from initial layer
+output_init = []                                                 #Output from initial layer 
+induced_local_field_final = []                                                 #Induced local field from final layer
+output_final = []                                                 #Output from final layer
 learning_rate = 0.1
 
 """ --- Activation Functions --- """
@@ -48,13 +48,27 @@ def fb_final_act(y):
 
 """ --- Feedforward Training --- """
 def feed_forward():
-    temp = []
     for i in range(300):
+        temp_induced_local_field_init_arr = []
+        temp_output_init_arr = []
         for j in range(24):
+            temp_induced_local_field_init = w_init[j] * x[i] + w_init_bias[j] 
+            temp_induced_local_field_init_arr.append(temp_induced_local_field_init)
+            temp_output_init_arr.append(ff_init_act(temp_induced_local_field_init))
+        induced_local_field_init.append(temp_induced_local_field_init_arr)
+        output_init.append(temp_output_init_arr)
+        temp_induced_local_field_final = w_final * x[i] + w_final_bias
+        induced_local_field_final.append(temp_induced_local_field_final)
+        output_final.append(ff_final_act(temp_induced_local_field_final))
+        
+        
+        
+            
+            
             
             
             
 """ --- Main Algorithm --- """
 
 while(1):
-    y = feed_forward()
+    feed_forward()
