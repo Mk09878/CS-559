@@ -15,9 +15,9 @@ d = (np.sin(20 * x) + (3 * x) + v)
 
 #PLotting x vs d
 plt.title("x vs d")
-plt.scatter(x, d, c = 'black')
 plt.xlabel("X")
 plt.ylabel("D")
+plt.scatter(x, d, c = 'black')
 plt.show()
 
 #Initializing parameters
@@ -28,12 +28,13 @@ w_final_bias = np.random.uniform(0, 1, size = (1, 1))
 induced_local_field_init = [0] * 24                                                 #Induced local field from initial layer
 output_init = [0] * 24                                                 #Output from initial layer 
 induced_local_field_final = 0                                                 #Induced local field from final layer
-output_final = 0                                                 #Output from final layer
-learning_rate = 15
+output_final = 0
+output_final_arr = [0] * 300                                                 #Output from final layer
+learning_rate = 8
 error = 0
 error_arr = []
 epochs = 0
-
+    
 """ --- Activation Functions --- """
 
 #Feedforward
@@ -63,6 +64,7 @@ def feed_forward():
     
     induced_local_field_final = np.matmul(np.array(output_init).T,w_final) + w_final_bias
     output_final = ff_final_act(induced_local_field_final)
+    output_final_arr[i] = output_final
     #print(output_final)
     
             
@@ -100,15 +102,37 @@ while(1):
         feed_back()
         error += (d[i] - output_final) ** 2
         
-    epochs += 1
-    error /= 300
-    error_arr.append(error)
+    
+    error = error / 300
+    error_arr.append(error[0][0])
+    print(error)
     
     #Decreasing learning rate if no improvements take place
-    if(len(error_arr) > 1 or error_arr[epochs] > error_arr[epochs - 1]):
+    if(error_arr[epochs] > error_arr[epochs - 1]):
         learning_rate *= 0.9
-    if(error_arr[epochs - 1] < 0.01):
+    
+    #Terminate if error goes below some threshold
+    if(error < 0.01):
+        feed_back()
         break
+    
+    epochs += 1
+
+#PLotting the Number of Epochs vs Error (MSE)
+plt.title("Number of Epochs vs Error (MSE)")
+plt.xlabel("Number of Epochs")
+plt.ylabel("Error (MSE)")
+plt.scatter(range(len(error_arr)), error_arr, c = 'black')
+plt.show()
+
+#PLotting 
+plt.title("x vs d")
+plt.xlabel("X")
+plt.ylabel("D")
+plt.scatter(x, d, c = 'red', label = 'Desired')
+plt.scatter(x, output_final_arr, c = 'blue', label = 'Predicted')
+plt.legend()
+plt.show()
     
     
     
