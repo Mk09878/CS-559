@@ -2,6 +2,7 @@
 Written By: Mihir Kelkar
 Date: 3/25/2020
 """
+
 #Importing the libraries
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,11 +25,14 @@ w_init = np.random.uniform(0, 1, size = (24, 1))
 w_init_bias = np.random.uniform(0, 1, size = (24, 1))
 w_final = np.random.uniform(0, 1, size = (24, 1))
 w_final_bias = np.random.uniform(0, 1, size = (1, 1))
-induced_local_field_init = []                                                 #Induced local field from initial layer
-output_init = []                                                 #Output from initial layer 
-induced_local_field_final = []                                                 #Induced local field from final layer
-output_final = []                                                 #Output from final layer
-learning_rate = 0.1
+induced_local_field_init = [0] * 24                                                 #Induced local field from initial layer
+output_init = [0] * 24                                                 #Output from initial layer 
+induced_local_field_final = 0                                                 #Induced local field from final layer
+output_final = 0                                                 #Output from final layer
+learning_rate = 15
+error = 0
+error_arr = []
+epochs = 0
 
 """ --- Activation Functions --- """
 
@@ -46,29 +50,64 @@ def fb_init_act(u):
 def fb_final_act(y):
     return 1
 
+
 """ --- Feedforward Training --- """
 def feed_forward():
-    for i in range(300):
-        temp_induced_local_field_init_arr = []
-        temp_output_init_arr = []
-        for j in range(24):
-            temp_induced_local_field_init = w_init[j] * x[i] + w_init_bias[j] 
-            temp_induced_local_field_init_arr.append(temp_induced_local_field_init)
-            temp_output_init_arr.append(ff_init_act(temp_induced_local_field_init))
-        induced_local_field_init.append(temp_induced_local_field_init_arr)
-        output_init.append(temp_output_init_arr)
-        temp_induced_local_field_final = w_final * x[i] + w_final_bias
-        induced_local_field_final.append(temp_induced_local_field_final)
-        output_final.append(ff_final_act(temp_induced_local_field_final))
-        
-        
-        
+    global output_final
+    global induced_local_field_final
+    
+    #Calculating the local fields and the outputs
+    for j in range(24):
+        induced_local_field_init[j] = w_init[j] * x[i] + w_init_bias[j] 
+        output_init[j] = ff_init_act(induced_local_field_init[j])
+    
+    induced_local_field_final = np.matmul(np.array(output_init).T,w_final) + w_final_bias
+    output_final = ff_final_act(induced_local_field_final)
+    #print(output_final)
+    
             
-            
-            
-            
-            
-""" --- Main Algorithm --- """
+""" --- Backpropagation --- """
+def feed_back():
+    global output_final
+    global induced_local_field_final
+    global w_init
+    global w_init_bias
+    global w_final
+    global w_final_bias
+    grad_init = np.zeros((24, 1))
+    grad_init_bias = np.zeros((24, 1))
+    grad_final = np.zeros((24, 1))
+    count = 0
+    #Calculating the gradients
+    grad_final_bias = -1 * fb_final_act(induced_local_field_final) * (d[i] - output_final)
+    for j in range(24):
+        count+=1
+        grad_final[j] = -1 * output_init[j] * fb_final_act(induced_local_field_final) * (d[i] - output_final)
+        grad_init_bias[j] = -1 * fb_init_act(induced_local_field_init[j]) * w_final[j] * fb_final_act(induced_local_field_final) * (d[i] - output_final)
+        grad_init[j] = -1 * x[i] * fb_init_act(induced_local_field_init[j]) * w_final[j] * fb_final_act(induced_local_field_final) * (d[i] - output_final)
+    
+    #Updating the weights
+    w_init = w_init - learning_rate * (grad_init/300)
+    w_init_bias = w_init_bias - learning_rate * (grad_init_bias/300)
+    w_final = w_final - learning_rate * (grad_final/300)
+    w_final_bias = w_final_bias - learning_rate * (grad_final_bias/300) 
 
+    
+""" --- Main Algorithm --- """
 while(1):
-    feed_forward()
+    for i in range(300):
+        feed_forward()
+        feed_back()
+        error += (d[i] - output_final) ** 2
+        
+    epochs += 1
+    error /= 300
+    error_arr.append(error)
+    
+    if(len(error_arr) > 1 or error_arr[epochs] > error_arr[epochs - 1]):
+        learning_rate *= 0.9
+    if(error_arr[epochs - 1] < 0.01):
+        break
+    
+    
+    
