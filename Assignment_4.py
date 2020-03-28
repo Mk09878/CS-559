@@ -104,6 +104,7 @@ while(1):
     error /= 300
     error_arr.append(error)
     
+    #Decreasing learning rate if no improvements take place
     if(len(error_arr) > 1 or error_arr[epochs] > error_arr[epochs - 1]):
         learning_rate *= 0.9
     if(error_arr[epochs - 1] < 0.01):
