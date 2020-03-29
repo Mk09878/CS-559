@@ -122,7 +122,7 @@ while(1):
 plt.title("Number of Epochs vs Error (MSE)")
 plt.xlabel("Number of Epochs")
 plt.ylabel("Error (MSE)")
-plt.scatter(range(len(error_arr)), error_arr, c = 'black')
+plt.plot(range(len(error_arr)), error_arr, c = 'black')
 plt.show()
 
 #PLotting 
