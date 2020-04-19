@@ -40,20 +40,20 @@ plt.show()
 def linear_kernel(x, y):
     return np.dot(x, y)
 
-def polynomial_kernel(x, y, d):
+def polynomial_kernel(x, y, d = 5):
     return (1 + np.dot(x, y)) ** d
 
 def gaussian_kernel(x, y, sigma):
     return np.exp(-np.linalg.norm(x-y)**2 / (sigma ** 2))
         
 #Creating the kernel matrix
-k = [[0 for x in range(100)] for y in range(100)]
+K = [[0 for x in range(100)] for y in range(100)]
 for i in range(100):
     for j in range(100):
-        k[i][j] = polynomial_kernel(x[i], x[j], 5)
+        K[i][j] = polynomial_kernel(x[i], x[j], 5)
 
 temp = np.ones(100) * -1
-P = cvxopt.matrix(np.outer(d,d) * k)
+P = cvxopt.matrix(np.outer(d,d) * K)
 q = cvxopt.matrix(temp)
 G = cvxopt.matrix(np.diag(temp))
 h = cvxopt.matrix(np.zeros(100))
@@ -61,7 +61,7 @@ A = cvxopt.matrix(d, (1,100))
 b = cvxopt.matrix(0.0)
 
 #result = cvxopt.solvers.qp(P, q, G, h, A, b)
-result = cvxopt.solvers.qp(cvxopt.matrix(np.outer(d,d) * k), 
+result = cvxopt.solvers.qp(cvxopt.matrix(np.outer(d,d) * K), 
                            cvxopt.matrix(temp), cvxopt.matrix(np.diag(temp)), 
                            cvxopt.matrix(np.zeros(100)), 
                            cvxopt.matrix(d, (1,100)), 
@@ -69,3 +69,69 @@ result = cvxopt.solvers.qp(cvxopt.matrix(np.outer(d,d) * k),
 
 #alpha = np.ravel(result['x'])
 alpha = np.asarray(result['x']).flatten()
+sv_cp1_x = []
+sv_cp1_y = []
+sv_cn1_x = []
+sv_cn1_y = []
+sv_x = []
+sv_y = []
+indices = []
+for i in range(100):
+    if(alpha[i] > 1e-5):
+        """if(d[i] == 1):
+            sv_cp1_x.append(x[i])
+            sv_cp1_y.append(d[i])
+        else:
+            sv_cn1_x.append(x[i])
+            sv_cn1_y.append(d[i])"""
+        sv_x.append(x[i])
+        sv_y.append(d[i])
+        indices.append(i)
+
+#sv_x = sv_cp1_x + sv_cn1_x
+#sv_y = sv_cp1_y + sv_cn1_y
+
+summation = 0
+g = 0
+hyperplane = []
+p_hyperplane = []
+n_hyperplane = []
+alpha_sv = []
+d_sv = []
+for i in indices:
+    alpha_sv.append(alpha[i])
+    d_sv.append(d[i])
+for i in range(len(sv_x)):
+    summation += alpha_sv[i] * d_sv[i] * polynomial_kernel(sv_x[i], sv_x[1], 5)
+bias = sv_y[1] - summation
+print(bias)
+
+
+x_coord = np.linspace(0.0, 1.0, num=1000)
+y_coord = np.linspace(0.0, 1.0, num=1000)
+
+for i in range(len(x_coord)):
+    print("Iteration:",i)
+    for j in range(len(y_coord)):
+        g = 0
+        for k in range(len(sv_x)):
+            g += alpha_sv[k] * d_sv[k] * polynomial_kernel(sv_x[k], np.asarray([x_coord[i], y_coord[j]]), 5)
+        g = g + bias
+        
+        if -0.1 < g < 0.1:
+            hyperplane.append([x_coord[i], y_coord[j]])
+        elif 0.9 < g < 1.1:
+            p_hyperplane.append([x_coord[i], y_coord[j]])
+        elif -1.1 < g < -0.9:
+            n_hyperplane.append([x_coord[i], y_coord[j]])
+    
+
+fig, ax = plt.subplots(figsize=(10,10))
+plt.scatter(*zip(*class_one), c = 'red', label = 'Class 1')
+plt.scatter(*zip(*class_minusone), c = 'green', label = 'Class -1')
+plt.scatter(*zip(*p_hyperplane), c = 'red',s=1, label = 'Hyperplane 1')
+plt.scatter(*zip(*hyperplane), c = 'blue',s=1, label = 'Margin')
+plt.scatter(*zip(*n_hyperplane), c = 'green', s=1, label = 'Hyperplane -1')
+plt.scatter(*zip(*sv_x), facecolors = 'none', edgecolors='black',label='Support Vectors')
+plt.legend(loc = 'best')
+plt.show()        
